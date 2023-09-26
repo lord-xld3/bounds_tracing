@@ -43,7 +43,7 @@ img, initial_pixel, directions = bounds.init_trace(img, img_width, img_height, d
 img = bounds.main_trace(img, img_width, img_height, directions, initial_pixel, initial_pixel, boundary_color)
 
 # Flood fill
-img = flood.fill(img, initial_pixel, 2)
+# img = flood.fill(img, initial_pixel, 2)
 
 for line in img:
     print(line)
