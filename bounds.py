@@ -16,6 +16,7 @@ def rotate_directions(directions, i, n):
 
 def init_trace(img, mask, img_width, img_height, directions, initial_pixel, boundary_color):
     x, y = initial_pixel  # Extract x and y coordinates
+    mask[y][x] = 1 # Always mark the initial pixel as checked
     
     # Check pixels in all directions
     for i, (dx, dy) in enumerate(directions):
@@ -28,7 +29,7 @@ def init_trace(img, mask, img_width, img_height, directions, initial_pixel, boun
         
         # Check if the pixel is a different color than the boundary
         if get_color(img, (new_x, new_y)) != boundary_color:
-            mask[new_y][new_x] = 1
+            mask[new_y][new_x] = 2
             # Set previous pixel as the initial pixel
             initial_pixel = (new_x - dx, new_y - dy)
             directions = rotate_directions(directions, i, 1)
@@ -37,19 +38,34 @@ def init_trace(img, mask, img_width, img_height, directions, initial_pixel, boun
         # Else, just mark pixel as checked
         mask[new_y][new_x] = 1
     
-    # If we finish the for loop, it means the initial pixel is surrounded by the same color
-    mask[y][x] = 1
-    # Continue in the initial direction
+    # If we finish the for loop, it means 
+    # the initial pixel is surrounded by the same color
+    
+    # Find the closest direction to the bounds of the image
+    # This guarantees that if the shape takes up the full image, 
+    # we check the minimum number of pixels
+    
+    # Right, Down, Left, Up
+    distances = [(img_width - x), (img_height - y), x, y]
+    d = distances.index(min(distances))
+    
+    # Rotate closest direction to 0th index
+    directions = rotate_directions(directions, d, 0)
+    
+    # Continue in the closest direction
     dx, dy = directions[0]
     x, y = x + dx, y + dy # Move over once, since its already been checked
     while True:
         new_x, new_y = x + dx, y + dy
+        
         # If we don't go out of bounds
-        if (new_x >= 0 and new_x < img_width 
-        and new_y >= 0 and new_y < img_height):
+        if (0 <= new_x < img_width
+        and 0 <= new_y < img_height):
+           
             # If it's a different color
             if get_color(img, (new_x, new_y)) != boundary_color:
-                mask[new_y][new_x] = 1
+                mask[new_y][new_x] = 2
+            
             else:
                 # Same color, keep going
                 mask[new_y][new_x] = 1
@@ -58,32 +74,37 @@ def init_trace(img, mask, img_width, img_height, directions, initial_pixel, boun
         
         # Fall through (if its a different color) OR (if we go out of bounds)
         initial_pixel = (new_x - dx, new_y - dy)
+        
         # In this case, the current direction will always be the 0th index
-        # As described in rotate_directions(), this rotates opposite direction to 2nd position
+        # As described in rotate_directions(),
+        # this rotates opposite direction to 2nd position
         directions = rotate_directions(directions, 0, 1)
-        return mask, initial_pixel, directions
-        
-        
+        return mask, initial_pixel, directions      
 
 def main_trace(img, mask, img_width, img_height, directions, current_pixel, initial_pixel, boundary_color):
     x, y = current_pixel  # Extract x and y coordinates
     
     for i, (dx, dy) in enumerate(directions):
         new_x, new_y = x + dx, y + dy
+        
         # If we go out of bounds
         if (new_x < 0 or new_x >= img_width 
         or new_y < 0 or new_y >= img_height):
             continue
+
         # If pixel is initial pixel
         if (new_x, new_y) == initial_pixel:
+
             # Check surrounding pixels
             x, y = new_x, new_y
             for j, (dx, dy) in enumerate(directions):
                 new_x, new_y = x + dx, y + dy
+                
                 # If we go out of bounds
                 if (new_x < 0 or new_x >= img_width 
                 or new_y < 0 or new_y >= img_height):
                     continue
+
                 # If pixel is unchecked && pixel is same color as boundary
                 if (mask[new_y][new_x] == 0 
                 and get_color(img, (new_x, new_y)) == boundary_color):
@@ -97,29 +118,67 @@ def main_trace(img, mask, img_width, img_height, directions, current_pixel, init
             return mask
         
         # If pixel has already been checked
-        if mask[new_y][new_x] == 1:
+        if mask[new_y][new_x] != 0:
+            
             # Skip over the checked pixel and check for the same color
             skip_x, skip_y = new_x + dx, new_y + dy
 
-            # If out of bounds or not the boundary color
-            if (skip_x < 0 or skip_x >= img_width 
-            or skip_y < 0 or skip_y >= img_height
-            or get_color(img, (skip_x, skip_y)) != boundary_color):
-                # Check pixel in the opposite direction
-                dx, dy = directions[(i + 2) % 4]
-                new_x, new_y = x + dx, y + dy
-                # If this pixel is out of bounds or is already checked
-                if (new_x < 0 or new_x >= img_width
-                or new_y < 0 or new_y >= img_height 
-                or mask[new_y][new_x] == 1):
-                    return mask
-                # Else, mark the "opposite direction" as checked
-                mask[new_y][new_x] = 1
-            
-            else: # Mark the "skip direction" as checked
-                mask[skip_y][skip_x] = 1
-            
-            # Fall through if "skip direction" is out of bounds AND "opposite direction" is valid
+            # If NOT out of bounds
+            if (0 <= skip_x < img_width 
+            and 0 <= skip_y < img_height):
+                
+                # If pixel is NOT the boundary color
+                if get_color(img, (skip_x, skip_y)) != boundary_color:
+                    
+                    # Not checked, not out of bounds, not boundary color
+                    mask[skip_y][skip_x] = 2
+                    
+                    # Check pixel in the opposite direction
+                    dx, dy = directions[(i + 2) % 4]
+                    new_x, new_y = x + dx, y + dy
+                    
+                    # If this pixel is out of bounds or is already checked
+                    if (new_x < 0 or new_x >= img_width 
+                    or new_y < 0 or new_y >= img_height
+                    or mask[new_y][new_x] != 0):
+                        return mask
+                    
+                    # Else, opposite direction is valid pixel, mark it depending on color
+                    mask[new_y][new_x] = (
+                        1 if get_color(img, (new_x, new_y)) == boundary_color 
+                        else 2
+                    )
+
+                    # Set skip direction to opposite direction when we fall through
+                    skip_x, skip_y = new_x, new_y
+                
+                # Skip direction is valid and boundary color
+                else:
+                    mask[skip_y][skip_x] = 1
+
+                    # We also need to backtrack and mark surrounding pixels,
+                    # to avoid problems with flood fill
+                    for (dx, dy) in directions:
+                        
+                        back_x, back_y = new_x + dx, new_y + dy
+
+                        # If we go out of bounds
+                        if (back_x < 0 or back_x >= img_width
+                        or back_y < 0 or back_y >= img_height):
+                            continue
+
+                        # If pixel is unchecked
+                        if mask[back_y][back_x] == 0:
+                            
+                            # We should never see a boundary color here
+                            # When we skip over a pixel, this is because it was checked in init_trace()
+                            # And, this will only happen when the initial pixel is close to the edge of the image
+                            # Or, the shape is <= 3 in width or height
+                            mask[back_y][back_x] = 2
+                    
+                    # After backtracking, we can fall through
+
+            # Fall through if "skip direction" is out of bounds or boundary color
             # Also fall through if "opposite direction" is valid
             directions = rotate_directions(directions, i, 3)
             return main_trace(img, mask, img_width, img_height, directions, (skip_x, skip_y), initial_pixel, boundary_color)
@@ -131,7 +190,7 @@ def main_trace(img, mask, img_width, img_height, directions, current_pixel, init
             return main_trace(img, mask, img_width, img_height, directions, (new_x, new_y), initial_pixel, boundary_color)
         
         # Pixel is different color
-        mask[new_y][new_x] = 1
+        mask[new_y][new_x] = 2
         continue
     
     # We have checked all directions except backwards, backtrack and continue tracing.

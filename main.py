@@ -2,9 +2,6 @@
 
 # In this example, we set the "canvas" to all 0's
 # Then we draw a continuous shape of 1's
-# 0 == background / different color
-# 1 == current color
-# 2 == checked pixel
 
 import random
 import bounds, flood
@@ -45,9 +42,14 @@ mask, initial_pixel, directions = bounds.init_trace(img, mask, img_width, img_he
 # Start main trace
 mask = bounds.main_trace(img, mask, img_width, img_height, directions, initial_pixel, initial_pixel, boundary_color)
 
-# Flood fill
-# img = flood.fill(img, initial_pixel, 2)
-
 print("Mask:")
 for line in mask:
     print(line)
+
+# Flood fill
+img = flood.fill(img, mask, directions, img_height, img_width, initial_pixel, 3)
+
+print("Filled:")
+for line in img:
+    print(line)
+
