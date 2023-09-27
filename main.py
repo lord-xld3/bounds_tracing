@@ -8,15 +8,18 @@
 
 import random
 import bounds, flood
+import copy
 
 # Right, Down, Left, Up
 # To traverse "down" in the image, we need to increment the y coordinate
 directions = [(1,0),(0,1),(-1,0),(0,-1)]
 
 # Create an empty img of width x height
-img_height = 10
-img_width = 10
+img_height = 30
+img_width = 60
 img = [[0 for _ in range(img_width)] for _ in range(img_height)]
+# Clone the mask here to keep it as all "0's"
+mask = copy.deepcopy(img)
 
 # Draw a random shape and pick a random, valid starting point
 shape_size = (random.randint(3, img_width), random.randint(3, img_height))
@@ -28,22 +31,23 @@ for x in range(shape_init[0], shape_init[0] + shape_size[0]):
         img[y][x] = 1
 
 # Starting pixel and color must be within the shape
+# For now, just try to start in the center of the shape
 initial_pixel = (shape_init[0] + (shape_size[0] // 2), shape_init[1] + (shape_size[1] // 2))
 boundary_color = img[initial_pixel[1]][initial_pixel[0]]
 
+print("Image:")
 for line in img:
     print(line)
 
-print("\n")
-
 # Initialize tracing
-img, initial_pixel, directions = bounds.init_trace(img, img_width, img_height, directions, initial_pixel, boundary_color)
+mask, initial_pixel, directions = bounds.init_trace(img, mask, img_width, img_height, directions, initial_pixel, boundary_color)
 
 # Start main trace
-img = bounds.main_trace(img, img_width, img_height, directions, initial_pixel, initial_pixel, boundary_color)
+mask = bounds.main_trace(img, mask, img_width, img_height, directions, initial_pixel, initial_pixel, boundary_color)
 
 # Flood fill
 # img = flood.fill(img, initial_pixel, 2)
 
-for line in img:
+print("Mask:")
+for line in mask:
     print(line)
