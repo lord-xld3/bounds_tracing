@@ -149,8 +149,10 @@ def main_trace(img, mask, img_width, img_height, directions, current_pixel, init
                         else 2
                     )
 
-                    # Set skip direction to opposite direction when we fall through
-                    skip_x, skip_y = new_x, new_y
+                    # We just ran into our own tail going counterclockwise
+                    # So we're going to flip the direction to hopefully keep going clockwise
+                    directions = rotate_directions(directions, i, 1)
+                    return main_trace(img, mask, img_width, img_height, directions, (new_x, new_y), initial_pixel, boundary_color)
                 
                 # Skip direction is valid and boundary color
                 else:
@@ -170,16 +172,22 @@ def main_trace(img, mask, img_width, img_height, directions, current_pixel, init
                         # If pixel is unchecked
                         if mask[back_y][back_x] == 0:
                             
-                            # We should never see a boundary color here
-                            # When we skip over a pixel, this is because it was checked in init_trace()
-                            # And, this will only happen when the initial pixel is close to the edge of the image
-                            # Or, the shape is <= 3 in width or height
+                            # Even if this pixel is the boundary color,
+                            # we're going to mark it as not part of the boundary
+                            # because this is a 1 pixel wide "bridge" to something else
+                            # and if we traverse that bridge, it will be difficult to get back
+                            # ... also it screws with the flood fill algorithm
+
+                            # If its not a 1px bridge, we'll find out shortly 
+                            # after we skip a pixel and run into our own tail
+                            # but the flood fill will go around it
+                            
+                            get_color(img, (back_y, back_x)) # Assuming get_color() will mark the image
                             mask[back_y][back_x] = 2
                     
                     # After backtracking, we can fall through
 
             # Fall through if "skip direction" is out of bounds or boundary color
-            # Also fall through if "opposite direction" is valid
             directions = rotate_directions(directions, i, 3)
             return main_trace(img, mask, img_width, img_height, directions, (skip_x, skip_y), initial_pixel, boundary_color)
         

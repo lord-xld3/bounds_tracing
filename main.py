@@ -12,8 +12,8 @@ import copy
 directions = [(1,0),(0,1),(-1,0),(0,-1)]
 
 # Create an empty img of width x height
-img_height = 30
-img_width = 60
+img_height = 6
+img_width = 6
 img = [[0 for _ in range(img_width)] for _ in range(img_height)]
 # Clone the mask here to keep it as all "0's"
 mask = copy.deepcopy(img)
