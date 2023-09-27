@@ -15,7 +15,7 @@ Ideally, we want to check the minimum amount of pixels for an enclosed shape of 
 
 ## Output
 
-![Image](./Capture.png)
+![Image](./Capture.PNG)
 
 ## Usage
 
