@@ -12,26 +12,27 @@ import copy
 directions = [(1,0),(0,1),(-1,0),(0,-1)]
 
 # Create an empty img of width x height
-img_height = 30
-img_width = 60
+img_height = 10
+img_width = 10
 img = [[0 for _ in range(img_width)] for _ in range(img_height)]
 # Clone the mask here to keep it as all "0's"
 mask = copy.deepcopy(img)
 
 init_px = (img_width // 2, img_height // 2)
+shape_color = 1
 
 def continuous_fill(img, img_height, img_width, pixel):
     x, y = pixel
     if (0 <= x < img_width
     and 0 <= y < img_height
     and img[y][x] == 0):
-        if random.randint(0, 10) > 3:
+        if random.randint(0, 10) > 4: # Probability of recursion
             img[y][x] = 1
             continuous_fill(img, img_height, img_width, (x+1, y))
             continuous_fill(img, img_height, img_width, (x-1, y))
             continuous_fill(img, img_height, img_width, (x, y+1))
             continuous_fill(img, img_height, img_width, (x, y-1))
-        else:
+        else: # Different color / boundary, don't fill beyond it
             img[y][x] = 2
             return
 
@@ -47,18 +48,14 @@ print("Image:")
 for line in img:
     print(line)
 
-# # Initialize tracing
-# mask, initial_pixel, directions = bounds.init_trace(img, mask, img_width, img_height, directions, initial_pixel, boundary_color)
+mask = bounds.trace(img, mask, img_height, img_width, init_px, shape_color)
 
-# # Start main trace
-# mask = bounds.main_trace(img, mask, img_width, img_height, directions, initial_pixel, initial_pixel, boundary_color)
-
-# print("Mask:")
-# for line in mask:
-#     print(line)
+print("Mask:")
+for line in mask:
+    print(line)
 
 # # Flood fill
-# img = flood.fill(img, mask, directions, img_height, img_width, initial_pixel, 3)
+# img = flood.fill(img, mask, directions, img_height, img_width, init_px, 3)
 
 # print("Filled:")
 # for line in img:
