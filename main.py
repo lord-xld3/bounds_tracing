@@ -7,10 +7,6 @@ import random
 import bounds, flood
 import copy
 
-# Right, Down, Left, Up
-# To traverse "down" in the image, we need to increment the y coordinate
-directions = [(1,0),(0,1),(-1,0),(0,-1)]
-
 # Create an empty img of width x height
 img_height = 10
 img_width = 10
@@ -21,34 +17,40 @@ mask = copy.deepcopy(img)
 init_px = (img_width // 2, img_height // 2)
 shape_color = 1
 
-def continuous_fill(img, img_height, img_width, pixel):
+def continuous_fill(
+    img: list[list[int]], 
+    img_height: int, 
+    img_width: int,
+    shape_color: int | str, 
+    pixel: tuple[int,int]
+):
     x, y = pixel
     if (0 <= x < img_width
     and 0 <= y < img_height
     and img[y][x] == 0):
         if random.randint(0, 10) > 4: # Probability of recursion
-            img[y][x] = 1
-            continuous_fill(img, img_height, img_width, (x+1, y))
-            continuous_fill(img, img_height, img_width, (x-1, y))
-            continuous_fill(img, img_height, img_width, (x, y+1))
-            continuous_fill(img, img_height, img_width, (x, y-1))
+            img[y][x] = shape_color
+            continuous_fill(img, img_height, img_width, shape_color, (x+1, y))
+            continuous_fill(img, img_height, img_width, shape_color, (x-1, y))
+            continuous_fill(img, img_height, img_width, shape_color, (x, y+1))
+            continuous_fill(img, img_height, img_width, shape_color, (x, y-1))
         else: # Different color / boundary, don't fill beyond it
             img[y][x] = 2
             return
 
 # Set the initial pixel to correct color
 x, y = init_px
-img[y][x] = 1
-continuous_fill(img, img_height, img_width, (x+1, y))
-continuous_fill(img, img_height, img_width, (x-1, y))
-continuous_fill(img, img_height, img_width, (x, y+1))
-continuous_fill(img, img_height, img_width, (x, y-1))
+img[y][x] = shape_color
+continuous_fill(img, img_height, img_width, shape_color, (x+1, y))
+continuous_fill(img, img_height, img_width, shape_color, (x-1, y))
+continuous_fill(img, img_height, img_width, shape_color, (x, y+1))
+continuous_fill(img, img_height, img_width, shape_color, (x, y-1))
 
 print("Image:")
 for line in img:
     print(line)
 
-mask = bounds.trace(img, mask, img_height, img_width, init_px, shape_color)
+mask = bounds.trace(img, mask, img_height, img_width, shape_color, init_px)
 
 print("Mask:")
 for line in mask:
@@ -60,4 +62,3 @@ for line in mask:
 # print("Filled:")
 # for line in img:
 #     print(line)
-
