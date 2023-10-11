@@ -50,7 +50,7 @@ print("Image:")
 for line in img:
     print(line)
 
-mask = bounds.trace(img, mask, img_height, img_width, shape_color, init_px)
+mask = bounds.trace(img, mask, img_height, img_width, init_px, shape_color)
 
 print("Mask:")
 for line in mask:
